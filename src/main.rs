@@ -1,9 +1,7 @@
 use std::sync::Arc;
 
 #[derive(Default)]
-struct Cli {
-    _no_moving: Arc<()>,
-}
+struct Cli {}
 
 struct Tran<'a> {
     client: &'a mut Cli,
