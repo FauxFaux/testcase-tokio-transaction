@@ -1,22 +1,36 @@
-use tokio_postgres::{Client, NoTls};
+use std::sync::Arc;
 
-#[tokio::main]
-async fn main() {
-    let mut client = connect().await;
-    let mut tran = client.transaction().await.expect("transaction");
+#[derive(Default)]
+struct Cli {
+    _no_moving: Arc<()>,
+}
 
-    loop {
-        tran.commit().await.expect("committed");
-        tran = client.transaction().await.expect("second transaction");
+struct Tran<'a> {
+    client: &'a mut Cli,
+    _no_moving: Arc<()>,
+}
+
+impl Cli {
+    async fn tran(&mut self) -> Tran<'_> {
+        Tran {
+            client: self,
+            _no_moving: Default::default(),
+        }
     }
 }
 
-async fn connect() -> Client {
-    let (client, connection) = tokio_postgres::connect("", NoTls).await.expect("connect");
-    tokio::spawn(async move {
-        if let Err(e) = connection.await {
-            eprintln!("connection error: {}", e);
-        }
-    });
-    client
+impl<'c> Tran<'c> {
+    async fn commit(self) {}
 }
+
+async fn async_main() {
+    let mut client = Cli::default();
+    let mut tran = client.tran().await;
+
+    loop {
+        tran.commit().await;
+        tran = client.tran().await;
+    }
+}
+
+fn main() {}
