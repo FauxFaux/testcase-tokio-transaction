@@ -1,24 +1,22 @@
-use std::sync::Arc;
-
 #[derive(Default)]
 struct Cli {}
 
 struct Tran<'a> {
     client: &'a mut Cli,
-    _no_moving: Arc<()>,
 }
 
 impl Cli {
     async fn tran(&mut self) -> Tran<'_> {
-        Tran {
-            client: self,
-            _no_moving: Default::default(),
-        }
+        Tran { client: self }
     }
 }
 
 impl<'c> Tran<'c> {
     async fn commit(self) {}
+}
+
+impl Drop for Tran<'_> {
+    fn drop(&mut self) {}
 }
 
 async fn async_main() {
